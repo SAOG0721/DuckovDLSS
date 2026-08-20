@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>DuckovDLSS</AssemblyName>
+    <RootNamespace>DuckovDLSS</RootNamespace>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Version>0.5.1</Version>
+    <AssemblyVersion>0.5.1.0</AssemblyVersion>
+    <FileVersion>0.5.1.0</FileVersion>
+    <Deterministic>true</Deterministic>
+    <PathMap>$(MSBuildProjectDirectory)=/_/src/DuckovDLSS</PathMap>
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+    <DebugSymbols Condition="'$(Configuration)' == 'Release'">false</DebugSymbols>
+    <DuckovGameDir Condition="'$(DuckovGameDir)' == ''">$(DUCKOV_GAME_DIR)</DuckovGameDir>
+    <ManagedDir>$(DuckovGameDir)\Duckov_Data\Managed</ManagedDir>
+  </PropertyGroup>
+  <Target Name="ValidateDuckovBuildPaths" BeforeTargets="ResolveReferences">
+    <Error Condition="'$(DuckovGameDir)' == ''"
+           Text="Set DUCKOV_GAME_DIR or pass /p:DuckovGameDir=&quot;path to Escape from Duckov&quot;." />
+    <Error Condition="!Exists('$(ManagedDir)\TeamSoda.Duckov.Core.dll')"
+           Text="DuckovGameDir does not point to a valid Escape from Duckov installation: $(DuckovGameDir)" />
+  </Target>
+  <ItemGroup>
+    <Reference Include="TeamSoda.Duckov.Core"><HintPath>$(ManagedDir)\TeamSoda.Duckov.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(ManagedDir)\UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(ManagedDir)\UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(ManagedDir)\UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.RenderPipelines.Core.Runtime"><HintPath>$(ManagedDir)\Unity.RenderPipelines.Core.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.RenderPipelines.Universal.Runtime"><HintPath>$(ManagedDir)\Unity.RenderPipelines.Universal.Runtime.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

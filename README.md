@@ -1,66 +1,135 @@
 # DuckovDLSS
 
-Experimental NVIDIA DLSS Super Resolution and DLAA integration for **Escape from Duckov**.
+[English](#english) | [中文](#中文)
 
-《逃离鸭科夫》（Escape from Duckov）的实验性 NVIDIA DLSS Super Resolution / DLAA 模组。
+## English
 
-> This is an unofficial community modification. It is not affiliated with, sponsored by, or endorsed by Team Soda, Bilibili or NVIDIA.
->
-> 本模组是非官方社区实验项目，不代表游戏开发商、发行商或 NVIDIA 官方支持。
+Experimental NVIDIA DLSS Super Resolution and DLAA integration for **Escape from Duckov** on Direct3D 11.
 
-## Download / 下载
+### Features
 
-Download the current package from [GitHub Releases](https://github.com/SAOG0721/DuckovDLSS/releases/latest).
+- Direct NVIDIA NGX DLSS SR and DLAA evaluation on Unity's render thread.
+- Quality, Balanced, Performance, Ultra Performance, and DLAA modes.
+- Reuses URP TAA jitter, reversed-Z depth, and motion vectors.
+- Optional luminance-domain 3×3 Gaussian USM sharpening after DLSS, adjustable from 0 to 1; zero is an exact bypass.
+- Restores native TAA for a recovery frame after an evaluation failure and performs explicit render-thread shutdown.
+- Captures game input while the control panel is open.
 
-请从 [GitHub Releases](https://github.com/SAOG0721/DuckovDLSS/releases/latest) 下载当前版本。
+### Requirements
 
-Current release: **v0.4.1**
-
-Package SHA-256: `83A12916D3F705D0F21A8930E1D2F9EDD86567F09EA79EA29648BA51E6243873`
-
-## Requirements / 运行要求
-
-- Escape from Duckov 2.3.30 / Unity 2022.3.62f2
+- Escape from Duckov `2.3.30` / Unity `2022.3.62f2`
 - Windows x64 and Direct3D 11
 - NVIDIA RTX GPU and a current NVIDIA driver
 - Do not enable another temporal-upscaling mod at the same time
-- 请勿与 DuckovFSR2 或其他时域超分模组同时启用
 
-## Installation / 安装
+### Download and installation
 
-Extract every file from the release archive directly into:
+Download `DuckovDLSS-v0.5.1-win64.zip` from the [v0.5.1 release](https://github.com/SAOG0721/DuckovDLSS/releases/tag/v0.5.1).
+
+```text
+67AC1FE005543881DCCD1DDED44F2876620978292220914726F72A64475640D6  DuckovDLSS-v0.5.1-win64.zip
+```
+
+Extract every file directly into:
 
 ```text
 Escape from Duckov\Duckov_Data\Mods\DuckovDLSS\
 ```
 
-Do not add another nested version folder.
+Do not add another nested version directory.
 
-把压缩包内全部文件直接解压到上述目录，不要额外嵌套一层版本文件夹。
+### Controls
 
-## Controls / 操作
+- `F8`: enable or disable DLSS.
+- `F9`: open or close the draggable control panel.
+- The panel selects the DLSS mode, sharpening strength, and technical-information display.
 
-- `F8`: open or close the draggable control panel / 打开或关闭可拖动控制面板
-- `DLSS: ON/OFF`: enable or disable DLSS inside the panel / 在面板内启用或关闭 DLSS
-- Mode buttons: Ultra Performance, Performance, Balanced, Quality and DLAA / 直接选择五个档位
-- `Show compact technical info overlay`: show or hide the technical information panel / 显示或隐藏技术信息框
+### Current limitations
 
-The old direct `F9` mode-cycle and `F10` information hotkeys are no longer used. DLAA uses 100% input resolution, native NGX DLAA mode and preset K.
+- Transparent objects, particles, and camera-space UI do not currently have a reactive mask and may show temporal artifacts.
+- This release was rebuilt and package-verified against the versions above. Final visual quality and long-session stability still require in-game validation on each system.
 
-旧版 `F9` 循环档位和 `F10` 信息开关已取消。DLAA 以 100% 输入分辨率运行，并使用原生 NGX DLAA 模式和 preset K。
+### Build
 
-## Technical notes / 技术说明
+Managed bridge requirements: .NET SDK targeting `netstandard2.1` and a legally installed copy of the game.
 
-- Reuses URP TAA jitter, reversed-Z depth and motion vectors.
-- Orders DLSS/NGX evaluation on Unity's Direct3D 11 render thread.
-- Resolves the current URP post-process color target at execution time, preserving its graphics format. This avoids washed-out output when optional post-processing passes change the color-buffer swap order.
-- Submits URP 14 translation-matrix jitter with the matching NGX pixel-space sign. HDRP/DSP `m02/m12` sign rules do not apply to Duckov's URP `m03/m13` path.
-- Treats the current post-tonemap input as LDR and does not request NGX auto exposure for that path.
-- Transparent objects, particles and camera-space UI do not currently have a reactive mask and may show temporal artifacts.
-- The release includes the NVIDIA-signed production `nvngx_dlss.dll`; its redistribution is governed by the accompanying `nvngx_dlss.license.txt`.
+```powershell
+$env:DUCKOV_GAME_DIR = 'C:\path\to\Escape from Duckov'
+dotnet build .\managed\DuckovDLSS.csproj -c Release
+```
 
-This remains an experimental release. The managed build and packaged hashes are verified, but standardized in-game A/B captures for the final jitter correction are still recommended.
+Native bridge requirements: Visual Studio 2022 C++ tools, CMake, Windows SDK `fxc.exe`, NVIDIA Streamline SDK 2.12 (for NGX headers/import library), and Unity NativeRenderingPlugin headers.
 
-## Uninstall / 卸载
+```powershell
+cmake -S .\native -B .\native\build -G Ninja -DCMAKE_BUILD_TYPE=Release `
+  -DSTREAMLINE_ROOT='C:\path\to\Streamline-SDK-2.12.0' `
+  -DUNITY_NATIVE_PLUGIN_ROOT='C:\path\to\Unity-NativeRenderingPlugin\PluginSource\source'
+cmake --build .\native\build --config Release
+```
 
-Disable the mod in Duckov's mod menu, or remove the `DuckovDLSS` directory while the game is closed. When normally deactivated, the mod restores the original URP render scale, upscaling filter and MSAA state.
+The repository contains only the mod's authored source. Game assemblies and redistributable runtime DLLs are not tracked.
+
+### Third-party components and status
+
+The binary release includes NVIDIA's signed DLSS runtime under the accompanying NVIDIA license. The native bridge uses Unity's MIT-licensed NativeRenderingPlugin headers. See [third-party notices](THIRD_PARTY_NOTICES.md).
+
+This is an independent community mod and is not affiliated with or endorsed by Team Soda, Bilibili, Unity, or NVIDIA. No open-source license has been selected for the mod source at this time.
+
+---
+
+## 中文
+
+为《逃离鸭科夫》Direct3D 11 提供实验性的 NVIDIA DLSS 超分辨率和 DLAA 集成。
+
+### 功能
+
+- 在 Unity 渲染线程上直接执行 NVIDIA NGX DLSS SR / DLAA。
+- 支持质量、均衡、性能、超级性能和 DLAA 档位。
+- 复用 URP TAA 抖动、反向 Z 深度和运动矢量。
+- 可在 DLSS 原始输出后应用亮度域 3×3 Gaussian USM 锐化，强度范围 0–1；设为 0 时完全绕过。
+- DLSS 评估失败后恢复一帧原生 TAA，并在退出时执行显式渲染线程清理。
+- 控制面板打开时会接管游戏输入。
+
+### 运行要求
+
+- 《逃离鸭科夫》`2.3.30` / Unity `2022.3.62f2`
+- Windows x64、Direct3D 11
+- NVIDIA RTX 显卡和可用的新版本驱动
+- 不要同时启用其他时域超分辨率模组
+
+### 下载与安装
+
+从 [v0.5.1 Release](https://github.com/SAOG0721/DuckovDLSS/releases/tag/v0.5.1) 下载 `DuckovDLSS-v0.5.1-win64.zip`，把压缩包内全部文件直接解压到：
+
+```text
+67AC1FE005543881DCCD1DDED44F2876620978292220914726F72A64475640D6  DuckovDLSS-v0.5.1-win64.zip
+```
+
+```text
+Escape from Duckov\Duckov_Data\Mods\DuckovDLSS\
+```
+
+不要额外嵌套版本目录。
+
+### 操作
+
+- `F8`：启用或关闭 DLSS。
+- `F9`：打开或关闭可拖动控制面板。
+- 面板内可选择 DLSS 档位、锐化强度和技术信息显示。
+
+### 当前限制
+
+- 透明物体、粒子和相机空间 UI 目前没有 reactive mask，可能仍有时域瑕疵。
+- 本版本已针对上述游戏版本完成重新构建和发布包校验；不同系统上的最终画质与长时间稳定性仍需实际游戏验证。
+
+### 构建
+
+托管桥接需要可编译 `netstandard2.1` 的 .NET SDK，以及用户合法安装的游戏。原生桥接还需要 Visual Studio 2022 C++ 工具、CMake、Windows SDK `fxc.exe`、NVIDIA Streamline SDK 2.12 和 Unity NativeRenderingPlugin 头文件。命令见上方英文部分。
+
+仓库只包含模组作者编写的关键源码，不跟踪游戏程序集或可再分发的运行时 DLL。
+
+### 第三方组件与项目状态
+
+二进制发布包包含 NVIDIA 签名的 DLSS 运行库，并附带 NVIDIA 许可文本；原生桥接使用 Unity 以 MIT 许可发布的 NativeRenderingPlugin 头文件。详见[第三方说明](THIRD_PARTY_NOTICES.md)。
+
+本项目是独立社区模组，与游戏开发商、发行商、Unity 或 NVIDIA 不存在隶属或背书关系。目前尚未为模组源码选择开源许可证。
